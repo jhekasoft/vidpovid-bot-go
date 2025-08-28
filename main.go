@@ -9,10 +9,8 @@ import (
 
 	"github.com/joho/godotenv"
 	openai "github.com/sashabaranov/go-openai"
-	tele "gopkg.in/telebot.v3"
+	tele "gopkg.in/telebot.v4"
 )
-
-var assistantMessage = "Відповідай як львівський батяр."
 
 func main() {
 	err := godotenv.Load()
@@ -47,11 +45,11 @@ func main() {
 		resp, err := ai.CreateChatCompletion(
 			context.Background(),
 			openai.ChatCompletionRequest{
-				Model: openai.GPT3Dot5Turbo,
+				Model: os.Getenv("OPENAI_MODEL"),
 				Messages: []openai.ChatCompletionMessage{
 					{
 						Role:    openai.ChatMessageRoleAssistant,
-						Content: assistantMessage,
+						Content: os.Getenv("OPENAI_ASSISTANT_MESSAGE"),
 					},
 					{
 						Role:    openai.ChatMessageRoleUser,
@@ -63,8 +61,10 @@ func main() {
 
 		if err != nil {
 			fmt.Printf("ChatCompletion error: %v\n", err)
+			return err
 		}
 
+		// TODO: check Choices length
 		return c.Reply(resp.Choices[0].Message.Content)
 	})
 
@@ -85,7 +85,7 @@ func main() {
 				Messages: []openai.ChatCompletionMessage{
 					{
 						Role:    openai.ChatMessageRoleAssistant,
-						Content: assistantMessage,
+						Content: os.Getenv("OPENAI_ASSISTANT_MESSAGE"),
 					},
 					{
 						Role:    openai.ChatMessageRoleUser,
@@ -97,6 +97,7 @@ func main() {
 
 		if err != nil {
 			fmt.Printf("ChatCompletion error: %v\n", err)
+			return err
 		}
 
 		return c.Reply(resp.Choices[0].Message.Content)
@@ -119,7 +120,7 @@ func main() {
 				Messages: []openai.ChatCompletionMessage{
 					{
 						Role:    openai.ChatMessageRoleAssistant,
-						Content: assistantMessage,
+						Content: os.Getenv("OPENAI_ASSISTANT_MESSAGE"),
 					},
 					{
 						Role:    openai.ChatMessageRoleUser,
@@ -146,7 +147,7 @@ func main() {
 				Messages: []openai.ChatCompletionMessage{
 					{
 						Role:    openai.ChatMessageRoleAssistant,
-						Content: assistantMessage,
+						Content: os.Getenv("OPENAI_ASSISTANT_MESSAGE"),
 					},
 					{
 						Role:    openai.ChatMessageRoleUser,
@@ -174,7 +175,7 @@ func main() {
 				Messages: []openai.ChatCompletionMessage{
 					{
 						Role:    openai.ChatMessageRoleAssistant,
-						Content: assistantMessage,
+						Content: os.Getenv("OPENAI_ASSISTANT_MESSAGE"),
 					},
 					{
 						Role:    openai.ChatMessageRoleUser,

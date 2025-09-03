@@ -1,0 +1,17 @@
+[Unit]
+Description=Vidpovid bot
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+StartLimitIntervalSec=500
+StartLimitBurst=5
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+
+WorkingDirectory=/opt/vidpovid-bot-go
+ExecStart=/opt/vidpovid-bot-go/vidpovid-bot-go
+
+[Install]
+WantedBy=multi-user.target

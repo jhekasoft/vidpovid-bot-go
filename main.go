@@ -164,6 +164,8 @@ func main() {
 		)
 		if err != nil {
 			fmt.Printf("Transcription error: %v\n", err)
+
+			return c.Reply("Ваша голосовуха складна.")
 		}
 
 		responseText := fmt.Sprintf("Ваша голосовуха містить: <blockquote>%s</blockquote>", resp.Text)

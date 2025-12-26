@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -81,7 +82,7 @@ func main() {
 		resp, err := ai.CreateChatCompletion(
 			context.Background(),
 			openai.ChatCompletionRequest{
-				Model: openai.GPT3Dot5Turbo,
+				Model: os.Getenv("TELEGRAM_BOT_TOKEN"),
 				Messages: []openai.ChatCompletionMessage{
 					{
 						Role:    openai.ChatMessageRoleAssistant,
@@ -116,7 +117,7 @@ func main() {
 		resp, err := ai.CreateChatCompletion(
 			context.Background(),
 			openai.ChatCompletionRequest{
-				Model: openai.GPT3Dot5Turbo,
+				Model: os.Getenv("TELEGRAM_BOT_TOKEN"),
 				Messages: []openai.ChatCompletionMessage{
 					{
 						Role:    openai.ChatMessageRoleAssistant,
@@ -137,13 +138,44 @@ func main() {
 		return c.Reply(resp.Choices[0].Message.Content)
 	})
 
+	b.Handle(tele.OnVoice, func(c tele.Context) error {
+		voice := c.Message().Voice
+		fmt.Printf("Receive voice message: %s, duration: %d seconds\n", voice.FileID, voice.Duration)
+
+		downloadDir := "./downloads"
+		if _, err := os.Stat(downloadDir); os.IsNotExist(err) {
+			os.Mkdir(downloadDir, os.ModePerm)
+		}
+
+		voiceFileName := fmt.Sprintf("voice_%s.ogg", voice.FileID)
+		voiceFilePath := filepath.Join(downloadDir, voiceFileName)
+		err := b.Download(&voice.File, voiceFilePath)
+		if err != nil {
+			fmt.Printf("Download file error: %v\n", err)
+			return nil
+		}
+
+		resp, err := ai.CreateTranscription(
+			context.Background(),
+			openai.AudioRequest{
+				Model:    openai.Whisper1,
+				FilePath: voiceFilePath,
+			},
+		)
+		if err != nil {
+			fmt.Printf("Transcription error: %v\n", err)
+		}
+
+		return c.Reply(resp.Text)
+	})
+
 	b.Handle(tele.OnUserJoined, func(c tele.Context) error {
 		user := c.Sender()
 
 		resp, err := ai.CreateChatCompletion(
 			context.Background(),
 			openai.ChatCompletionRequest{
-				Model: openai.GPT3Dot5Turbo,
+				Model: os.Getenv("TELEGRAM_BOT_TOKEN"),
 				Messages: []openai.ChatCompletionMessage{
 					{
 						Role:    openai.ChatMessageRoleAssistant,
@@ -171,7 +203,7 @@ func main() {
 		resp, err := ai.CreateChatCompletion(
 			context.Background(),
 			openai.ChatCompletionRequest{
-				Model: openai.GPT3Dot5Turbo,
+				Model: os.Getenv("TELEGRAM_BOT_TOKEN"),
 				Messages: []openai.ChatCompletionMessage{
 					{
 						Role:    openai.ChatMessageRoleAssistant,

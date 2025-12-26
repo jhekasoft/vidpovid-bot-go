@@ -166,7 +166,37 @@ func main() {
 			fmt.Printf("Transcription error: %v\n", err)
 		}
 
-		return c.Reply(resp.Text)
+		responseText := fmt.Sprintf("Ваша голосовуха містить: <blockquote>%s</blockquote>", resp.Text)
+		err = c.Reply(responseText, tele.ModeHTML)
+		if err != nil {
+			fmt.Printf("Reply error: %v\n", err)
+			return err
+		}
+
+		// Comment to the message
+		commentResp, err := ai.CreateChatCompletion(
+			context.Background(),
+			openai.ChatCompletionRequest{
+				Model: os.Getenv("OPENAI_MODEL"),
+				Messages: []openai.ChatCompletionMessage{
+					{
+						Role:    openai.ChatMessageRoleAssistant,
+						Content: os.Getenv("OPENAI_ASSISTANT_MESSAGE"),
+					},
+					{
+						Role:    openai.ChatMessageRoleUser,
+						Content: resp.Text,
+					},
+				},
+			},
+		)
+
+		if err != nil {
+			fmt.Printf("ChatCompletion error: %v\n", err)
+			return err
+		}
+
+		return c.Reply(commentResp.Choices[0].Message.Content)
 	})
 
 	b.Handle(tele.OnUserJoined, func(c tele.Context) error {

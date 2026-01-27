@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"vidpovid-bot-go/service"
@@ -19,11 +20,11 @@ func NewHandler(s *service.Service) *Handler {
 
 func (h *Handler) OnText(c tele.Context) error {
 	text := c.Text()
-	fmt.Printf("Receive message: %s\n", text)
+	log.Printf("Receive message: %s, chat: %s\n", text, h.GetChatTitle(c))
 
 	respMes, err := h.s.GetTextCompletionMes(text)
 	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
+		log.Printf("ChatCompletion error: %v\n", err)
 		return err
 	}
 
@@ -32,14 +33,14 @@ func (h *Handler) OnText(c tele.Context) error {
 
 func (h *Handler) OnPhoto(c tele.Context) error {
 	text := c.Text()
-	fmt.Printf("Receive photo message: %s\n", text)
+	log.Printf("Receive photo message: %s, chat: %s\n", text, h.GetChatTitle(c))
 	if text == "" {
 		return nil
 	}
 
 	respMes, err := h.s.GetTextCompletionMes(text)
 	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
+		log.Printf("ChatCompletion error: %v\n", err)
 		return err
 	}
 
@@ -48,14 +49,14 @@ func (h *Handler) OnPhoto(c tele.Context) error {
 
 func (h *Handler) OnVideo(c tele.Context) error {
 	text := c.Text()
-	fmt.Printf("Receive video message: %s\n", text)
+	log.Printf("Receive video message: %s, chat: %s\n", text, h.GetChatTitle(c))
 	if text == "" {
 		return nil
 	}
 
 	respMes, err := h.s.GetTextCompletionMes(text)
 	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
+		log.Printf("ChatCompletion error: %v\n", err)
 		return err
 	}
 
@@ -64,7 +65,12 @@ func (h *Handler) OnVideo(c tele.Context) error {
 
 func (h *Handler) OnVoice(c tele.Context) error {
 	voice := c.Message().Voice
-	fmt.Printf("Receive voice message: %s, duration: %d seconds\n", voice.FileID, voice.Duration)
+	log.Printf(
+		"Receive voice message: %s, duration: %d seconds, chat: %s\n",
+		voice.FileID,
+		voice.Duration,
+		h.GetChatTitle(c),
+	)
 
 	// TODO: move to the service
 	downloadDir := "./downloads"
@@ -76,13 +82,13 @@ func (h *Handler) OnVoice(c tele.Context) error {
 	voiceFilePath := filepath.Join(downloadDir, voiceFileName)
 	err := c.Bot().Download(&voice.File, voiceFilePath)
 	if err != nil {
-		fmt.Printf("Download file error: %v\n", err)
+		log.Printf("Download file error: %v\n", err)
 		return nil
 	}
 
 	respText, err := h.s.Transcribe(voiceFilePath)
 	if err != nil {
-		fmt.Printf("Transcription error: %v\n", err)
+		log.Printf("Transcription error: %v\n", err)
 
 		return c.Reply("Ваша голосовуха складна.")
 	}
@@ -90,14 +96,14 @@ func (h *Handler) OnVoice(c tele.Context) error {
 	responseText := fmt.Sprintf("Ваша голосовуха містить: <blockquote>%s</blockquote>", respText)
 	err = c.Reply(responseText, tele.ModeHTML)
 	if err != nil {
-		fmt.Printf("Reply error: %v\n", err)
+		log.Printf("Reply error: %v\n", err)
 		return err
 	}
 
 	// Comment to the message
 	commentRespMes, err := h.s.GetTextCompletionMes(respText)
 	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
+		log.Printf("ChatCompletion error: %v\n", err)
 		return err
 	}
 
@@ -106,12 +112,17 @@ func (h *Handler) OnVoice(c tele.Context) error {
 
 func (h *Handler) OnUserJoined(c tele.Context) error {
 	user := c.Sender()
+	if user == nil {
+		log.Printf("User joined: nil, chat: %s", h.GetChatTitle(c))
+		return nil
+	}
+	log.Printf("User joined: %s|%s\n, chat: %s", user.FirstName, user.Username, h.GetChatTitle(c))
 
 	respMes, err := h.s.GetUserJoinedMes(user.FirstName, user.Username)
 
 	// Anyway we always have the respMes
 	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
+		log.Printf("ChatCompletion error: %v\n", err)
 	}
 
 	return c.Send(respMes)
@@ -119,13 +130,26 @@ func (h *Handler) OnUserJoined(c tele.Context) error {
 
 func (h *Handler) OnUserLeft(c tele.Context) error {
 	user := c.Sender()
+	if user == nil {
+		log.Printf("User left: nil, chat: %s", h.GetChatTitle(c))
+		return nil
+	}
+	log.Printf("User left: %s|%s\n, chat: %s", user.FirstName, user.Username, h.GetChatTitle(c))
 
 	respMes, err := h.s.GetUserLeftMes(user.FirstName, user.Username)
 
 	// Anyway we always have the respMes
 	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
+		log.Printf("ChatCompletion error: %v\n", err)
 	}
 
 	return c.Send(respMes)
+}
+
+func (h *Handler) GetChatTitle(c tele.Context) string {
+	if c.Chat() != nil {
+		return fmt.Sprintf("%s|%d", c.Chat().Title, c.Chat().ID)
+	}
+
+	return "unknown"
 }

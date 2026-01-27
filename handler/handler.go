@@ -148,7 +148,10 @@ func (h *Handler) OnUserLeft(c tele.Context) error {
 
 func (h *Handler) GetChatTitle(c tele.Context) string {
 	if c.Chat() != nil {
-		return fmt.Sprintf("%s|%d", c.Chat().Title, c.Chat().ID)
+		if c.Chat().Title != "" {
+			return fmt.Sprintf("%s|%d", c.Chat().Title, c.Chat().ID)
+		}
+		return fmt.Sprintf("%s|%d", c.Chat().FirstName, c.Chat().ID)
 	}
 
 	return "unknown"

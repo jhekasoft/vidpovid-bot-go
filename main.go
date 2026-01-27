@@ -39,10 +39,6 @@ func main() {
 
 	h := handler.NewHandler(s)
 
-	// b.Handle("/hello", func(c tele.Context) error {
-	// 	return c.Send("Hello!")
-	// })
-
 	b.Handle(tele.OnText, h.OnText)
 	b.Handle(tele.OnPhoto, h.OnPhoto)
 	b.Handle(tele.OnVideo, h.OnVideo)

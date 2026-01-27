@@ -10,10 +10,12 @@ import (
 	tele "gopkg.in/telebot.v4"
 )
 
+// Handler for telegram bot events
 type Handler struct {
 	s *service.Service
 }
 
+// NewHandler creates a new Handler instance
 func NewHandler(s *service.Service) *Handler {
 	return &Handler{s}
 }

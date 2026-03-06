@@ -113,12 +113,12 @@ func (h *Handler) OnVoice(c tele.Context) error {
 }
 
 func (h *Handler) OnUserJoined(c tele.Context) error {
-	user := c.Sender()
+	user := c.Message().UserJoined
 	if user == nil {
 		log.Printf("User joined: nil, chat: %s", h.GetChatTitle(c))
 		return nil
 	}
-	log.Printf("User joined: %s|%s\n, chat: %s", user.FirstName, user.Username, h.GetChatTitle(c))
+	log.Printf("User joined: %s|%s, chat: %s", user.FirstName, user.Username, h.GetChatTitle(c))
 
 	respMes, err := h.s.GetUserJoinedMes(user.FirstName, user.Username)
 
@@ -131,12 +131,12 @@ func (h *Handler) OnUserJoined(c tele.Context) error {
 }
 
 func (h *Handler) OnUserLeft(c tele.Context) error {
-	user := c.Sender()
+	user := c.Message().UserLeft
 	if user == nil {
 		log.Printf("User left: nil, chat: %s", h.GetChatTitle(c))
 		return nil
 	}
-	log.Printf("User left: %s|%s\n, chat: %s", user.FirstName, user.Username, h.GetChatTitle(c))
+	log.Printf("User left: %s|%s, chat: %s", user.FirstName, user.Username, h.GetChatTitle(c))
 
 	respMes, err := h.s.GetUserLeftMes(user.FirstName, user.Username)
 

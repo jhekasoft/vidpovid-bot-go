@@ -16,6 +16,18 @@ func NewService(ai *openai.Client, aiModel, aiAssistanceMes string) *Service {
 	return &Service{ai, aiModel, aiAssistanceMes}
 }
 
+func (s *Service) GetStartBotMes(name, username string) (respMessage string, err error) {
+	text := "З вами починає діалог " + name
+	respMessage, err = s.GetTextCompletionMes(text)
+
+	// TODO: comment
+	if err != nil {
+		respMessage = "@" + username + ", привіт!"
+	}
+
+	return
+}
+
 func (s *Service) GetUserJoinedMes(name, username string) (respMessage string, err error) {
 	text := "До чату зайшов користувач " + name
 	respMessage, err = s.GetTextCompletionMes(text)

@@ -20,6 +20,24 @@ func NewHandler(s *service.Service) *Handler {
 	return &Handler{s}
 }
 
+func (h *Handler) OnHello(c tele.Context) error {
+	user := c.Sender()
+	if user == nil {
+		log.Printf("User start bot: nil, chat: %s", h.GetChatTitle(c))
+		return nil
+	}
+	log.Printf("User start bot: %s|%s, chat: %s", user.FirstName, user.Username, h.GetChatTitle(c))
+
+	respMes, err := h.s.GetStartBotMes(user.FirstName, user.Username)
+
+	// Anyway we always have the respMes
+	if err != nil {
+		log.Printf("ChatCompletion error: %v\n", err)
+	}
+
+	return c.Send(respMes)
+}
+
 func (h *Handler) OnText(c tele.Context) error {
 	text := c.Text()
 	log.Printf("Receive message: %s, chat: %s\n", text, h.GetChatTitle(c))

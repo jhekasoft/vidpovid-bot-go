@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 	"vidpovid-bot-go/handler"
@@ -46,6 +48,20 @@ func main() {
 	b.Handle(tele.OnVoice, h.OnVoice)
 	b.Handle(tele.OnUserJoined, h.OnUserJoined)
 	b.Handle(tele.OnUserLeft, h.OnUserLeft)
+
+	// HTTP server
+	httpPort := os.Getenv("HTTP_PORT")
+	if httpPort != "" {
+		go func() {
+			http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+				fmt.Fprint(w, "OK")
+			})
+			addr := fmt.Sprintf(":%s", httpPort)
+			log.Printf("Starting HTTP-server at %s", addr)
+			log.Fatal(http.ListenAndServe(addr, nil))
+		}()
+	}
 
 	b.Start()
 }
